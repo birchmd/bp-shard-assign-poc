@@ -7,7 +7,7 @@ pub type Balance = u128;
 pub type ShardId = usize;
 pub type AccountId = String;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct ValidatorStake {
     account_id: AccountId,
     stake: Balance,
@@ -129,6 +129,7 @@ pub fn assign_shards(
 mod tests {
     use super::{assign_shards, ValidatorStake};
     use std::cmp;
+    use std::collections::HashSet;
 
     const EXPONENTIAL_STAKES: [u128; 12] = [100, 90, 81, 73, 66, 59, 53, 48, 43, 39, 35, 31];
 
@@ -197,6 +198,11 @@ mod tests {
         assert!(assignment
             .iter()
             .all(|bps| bps.len() == validators_per_shard));
+
+        // no validator should be assigned to the same shard more than once
+        assert!(assignment
+            .iter()
+            .all(|bps| bps.iter().collect::<HashSet<_>>().len() == bps.len()));
 
         // stake distribution should be even
         assert!(assignment.iter().all(|bps| {
